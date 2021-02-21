@@ -1,11 +1,15 @@
 #MNIST CNN
 import numpy as np
-import tensorflow
+import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 
-print(tensorflow.__version__)
+print(tf.__version__)
 print(keras.__version__)
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.4
+session = tf.compat.v1.Session(config=config)
 num_classes = 10
 input_shape = (28,28,1)
 
