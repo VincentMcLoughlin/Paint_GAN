@@ -1,4 +1,10 @@
 #MNIST CNN
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
+# 0 = all messages are logged (default behavior)
+# 1 = INFO messages are not printed
+# 2 = INFO and WARNING messages are not printed
+# 3 = INFO, WARNING, and ERROR messages are not printed
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -10,6 +16,13 @@ print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 config = tf.compat.v1.ConfigProto()
 config.gpu_options.per_process_gpu_memory_fraction = 0.4
 session = tf.compat.v1.Session(config=config)
+#Note: To run on gpu/cpu (uses gpu by default)
+# with tf.device("gpu:0"):
+#    print("tf.keras code in this scope will run on GPU")
+
+# with tf.device("cpu:0"):
+#    print("tf.keras code in this scope will run on CPU")
+
 num_classes = 10
 input_shape = (28,28,1)
 
