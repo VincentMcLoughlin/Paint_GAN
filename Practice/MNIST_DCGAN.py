@@ -13,7 +13,7 @@ import time
 from IPython import display
 
 config = tf.compat.v1.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 1.00
+config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
 session = tf.compat.v1.Session(config=config)
 
 (train_images, train_labels), (_, _) = keras.datasets.mnist.load_data()
@@ -60,7 +60,8 @@ def make_generator_model():
 
 def make_discriminator_model():
     model = keras.Sequential()
-    model.add(layers.Conv2D(64, (5,5), strides=(2,2),padding='same', input_shape=[28,28,2]))
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',
+                                     input_shape=[28, 28, 1]))
     
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.3))
@@ -88,7 +89,7 @@ def generator_loss(fake_output):
 def train_step(images):
     noise = tf.random.normal([BATCH_SIZE, noise_dim])
 
-    with tf.GradientTape() as gen_tape, tf.GradientTape as disc_tape:
+    with tf.GradientTape() as gen_tape, tf.GradientTape() as disc_tape:
         generated_images = generator(noise, training=True)
 
         real_output = discriminator(images, training=True)
@@ -127,7 +128,7 @@ def train(dataset, epochs):
     checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
     checkpoint = tf.train.Checkpoint(generator_optimizer=generator_optimizer,
                                 discriminator_optimizer=discriminator_optimizer,
-                                generator=generator
+                                generator=generator,
                                 discriminator=discriminator)
     for epoch in range(epochs):
         start = time.time()
