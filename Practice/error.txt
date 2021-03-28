@@ -1,0 +1,12 @@
+tensorflow.python.framework.errors_impl.InternalError: 
+Failed to load in-memory CUBIN: CUDA_ERROR_NO_BINARY_FOR_GPU: 
+no kernel image is available for execution on the device [Op:Tanh]
+
+https://stackoverflow.com/questions/39465503/cuda-error-out-of-memory-in-tensorflow
+^ increasing memory fraction to 0.6, didn't work, 0.8 didn't work,  
+
+https://github.com/tensorflow/tensorflow/issues/46408
+^People saw a similar problem, but you need the latest version of tensorflow nightly to fix
+
+watch -n 0.5 nvidia-smi 
+^can use to see gpu processes.
