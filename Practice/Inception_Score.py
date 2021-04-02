@@ -35,6 +35,10 @@ from numpy import exp
 from keras.applications.inception_v3 import InceptionV3
 from keras.applications.inception_v3 import preprocess_input
 
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
+session = tf.compat.v1.Session(config=config)
+
 def calculate_inception_score(images, n_split=10, eps=1E-16):
 
     # load inception v3 model

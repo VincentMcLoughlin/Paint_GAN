@@ -14,7 +14,7 @@ print(tf.__version__)
 print(keras.__version__)
 print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
 config = tf.compat.v1.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.4
+#config.gpu_options.per_process_gpu_memory_fraction = 0.4
 session = tf.compat.v1.Session(config=config)
 #Note: To run on gpu/cpu (uses gpu by default)
 # with tf.device("gpu:0"):

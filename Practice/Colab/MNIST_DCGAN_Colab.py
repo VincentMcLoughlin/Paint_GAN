@@ -1,5 +1,5 @@
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 
 import tensorflow as tf 
 from tensorflow import keras
@@ -11,10 +11,12 @@ import numpy as np
 import PIL
 import time
 from IPython import display
+from google.colab import drive
+drive.mount('/content/gdrive')
 
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
-session = tf.compat.v1.Session(config=config)
+# config = tf.compat.v1.ConfigProto()
+# config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
+# session = tf.compat.v1.Session(config=config)
 
 (train_images, train_labels), (_, _) = keras.datasets.mnist.load_data()
 
@@ -109,15 +111,17 @@ def generate_and_save_images(model, epoch, test_input):
 
     predictions = model(test_input, training = False)
 
-    #fig = plt.figure(figsize=(4,4))
+    fig = plt.figure(figsize=(4,4))
 
-    # for i in range(predictions.shape[0]):
-    #     plt.subplot(4, 4, i+1)
-    #     plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
-    #     plt.axis('off')
+    for i in range(predictions.shape[0]):
+        plt.subplot(4, 4, i+1)
+        plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
+        plt.axis('off')
 
-    plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))
-    plt.show()
+    #plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))   
+    images_dir = '/content/gdrive/My Drive/EE8204/'
+    image_name = 'image_at_epoch_{:04d}.png'.format(epoch)
+    plt.savefig(f"{images_dir}/{image_name}")
 
 def train(dataset, epochs):
     
@@ -161,6 +165,6 @@ discriminator = make_discriminator_model()
 #decision = discriminator(generated_image)
 #print (decision)
 
-EPOCHS = 80 
+EPOCHS = 80
 
 train(train_dataset, EPOCHS)
