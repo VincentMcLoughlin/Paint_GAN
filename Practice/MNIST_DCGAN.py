@@ -12,9 +12,22 @@ import PIL
 import time
 from IPython import display
 
-config = tf.compat.v1.ConfigProto()
-config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
-session = tf.compat.v1.Session(config=config)
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+# config = tf.compat.v1.ConfigProto()
+# config.gpu_options.per_process_gpu_memory_fraction = 0.4 #0.4 works
+# session = tf.compat.v1.Session(config=config)
+
+import tensorflow as tf
+
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
+
+# config = ConfigProto() #Does not work without these three lines. Could also need these due to me not generating in greyscale
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
 
 (train_images, train_labels), (_, _) = keras.datasets.mnist.load_data()
 
@@ -109,15 +122,16 @@ def generate_and_save_images(model, epoch, test_input):
 
     predictions = model(test_input, training = False)
 
-    #fig = plt.figure(figsize=(4,4))
+    fig = plt.figure(figsize=(4,4))
 
-    # for i in range(predictions.shape[0]):
-    #     plt.subplot(4, 4, i+1)
-    #     plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
-    #     plt.axis('off')
+    for i in range(predictions.shape[0]):
+        plt.subplot(4, 4, i+1)
+        plt.imshow(predictions[i, :, :, 0] * 127.5 + 127.5, cmap='gray')
+        plt.axis('off')
 
     plt.savefig('image_at_epoch_{:04d}.png'.format(epoch))
-    plt.show()
+    #plt.show()
+    plt.close(fig)
 
 def train(dataset, epochs):
     
@@ -154,12 +168,12 @@ def train(dataset, epochs):
 
 generator = make_generator_model()
 noise = tf.random.normal([1, 100])
-#generated_image = generator(noise, training=False)
-#plt.imshow(generated_image[0, :, :, 0], cmap='gray')
+generated_image = generator(noise, training=False)
+plt.imshow(generated_image[0, :, :, 0], cmap='gray')
 
 discriminator = make_discriminator_model()
-#decision = discriminator(generated_image)
-#print (decision)
+decision = discriminator(generated_image)
+print (decision)
 
 EPOCHS = 80 
 
