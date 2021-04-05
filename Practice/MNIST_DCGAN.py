@@ -17,56 +17,57 @@ from IPython import display
 physical_devices = tf.config.list_physical_devices('GPU') 
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-generator_optimizer = tf.keras.optimizers.Adam(1e-4)
-discriminator_optimizer = tf.keras.optimizers.Adam(1e-4)
+learning_rate = 1e-4
+generator_optimizer = tf.keras.optimizers.Adam(learning_rate)
+discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate)
 
 
 def discriminator_loss(real_output, fake_output):
-    real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+    real_loss = cross_entropy(tf.ones_like(real_output), real_output) #Takes the cross entropy between an array of ones and the real_output
+    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output) #Takes the cross entropy between an array of ones and the fake_output
     total_loss = real_loss + fake_loss
     return total_loss
 
 def generator_loss(fake_output):
-    return cross_entropy(tf.ones_like(fake_output), fake_output)
+    return cross_entropy(tf.ones_like(fake_output), fake_output) #Cross entropy between array of ones and the generator output. 
 
 def make_generator_model():
     model = tf.keras.Sequential()
-    model.add(layers.Dense(7*7*256, use_bias=False, input_shape=(100,)))
-    model.add(layers.BatchNormalization())
+    model.add(layers.Dense(7*7*256, use_bias=False, input_shape=(100,))) #Input is 7*7*256, 256 is batch size, 7 is image size (grows to 28). 100 input shape is noise tensor size
+    model.add(layers.BatchNormalization()) #Always batch normalize except for intermediate layers at gen output and disc input. 
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Reshape((7, 7, 256)))
+    model.add(layers.Reshape((7, 7, 256))) #Reshape to fit. 
     assert model.output_shape == (None, 7, 7, 256)  # Note: None is the batch size
 
-    model.add(layers.Conv2DTranspose(128, (5, 5), strides=(1, 1), padding='same', use_bias=False))
-    assert model.output_shape == (None, 7, 7, 128)
+    model.add(layers.Conv2DTranspose(128, (5, 5), strides=(1, 1), padding='same', use_bias=False)) 
+    assert model.output_shape == (None, 7, 7, 128) #Decrease third channel
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
     model.add(layers.Conv2DTranspose(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))
-    assert model.output_shape == (None, 14, 14, 64)
+    assert model.output_shape == (None, 14, 14, 64) #Decrease again, increase image size
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
     model.add(layers.Conv2DTranspose(1, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='tanh'))
-    assert model.output_shape == (None, 28, 28, 1)
+    assert model.output_shape == (None, 28, 28, 1) #Get final output
 
     return model
 
 def make_discriminator_model():
     model = tf.keras.Sequential()
-    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same',
-                                     input_shape=[28, 28, 1]))
+    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', 
+                                     input_shape=[28, 28, 1])) #filter size of 64 (filters  = num of output filters in convolution, e.g output size in neurons)
     model.add(layers.LeakyReLU())
-    model.add(layers.Dropout(0.3))
+    model.add(layers.Dropout(0.3)) 
 
-    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same'))
+    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same')) 
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.3))
 
     model.add(layers.Flatten())
-    model.add(layers.Dense(1))
+    model.add(layers.Dense(1)) #output decision, fake/not
 
     return model
 

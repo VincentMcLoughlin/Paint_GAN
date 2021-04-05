@@ -1,0 +1,6 @@
+*.png
+*.zip
+*.cfg
+Lib/
+Scripts/
+share/
