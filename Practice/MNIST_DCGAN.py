@@ -142,8 +142,6 @@ def generate_and_save_images(model, epoch, test_input):
 train_images = train_images.reshape(train_images.shape[0], 28, 28, 1).astype('float32')
 train_images = (train_images - 127.5) / 127.5  # Normalize the images to [-1, 1]
 
-
-
 BUFFER_SIZE = 60000
 BATCH_SIZE = 256 #originally 256
 
