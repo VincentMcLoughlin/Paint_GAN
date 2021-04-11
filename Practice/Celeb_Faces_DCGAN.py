@@ -34,12 +34,14 @@ def get_np_data(nm_imgs_train):
     x_train = np.array(x_train)
     return (x_train)
 
-learning_rate = 1e-4
+#learning_rate = 1e-4
+learning_rate = 0.0002
 generator_optimizer = tf.keras.optimizers.Adam(learning_rate)
 discriminator_optimizer = tf.keras.optimizers.Adam(learning_rate)
 
 def make_generator_model():
     model = tf.keras.Sequential()
+    
     model.add(layers.Dense(4*4*256, use_bias=False, input_shape=(100,))) #Input is 7*7*256, 256 is batch size, 7 is image size (grows to 28). 100 input shape is noise tensor size
     model.add(layers.BatchNormalization()) #Always batch normalize except for intermediate layers at gen output and disc input. 
     model.add(layers.LeakyReLU())
@@ -47,34 +49,34 @@ def make_generator_model():
     model.add(layers.Reshape((4, 4, 256))) #Reshape to fit. 
     assert model.output_shape == (None, 4, 4, 256)  # Note: None is the batch size
 
-    model.add(layers.Conv2DTranspose(128, (5, 5), strides=(1, 1), padding='same', use_bias=False))     
+    model.add(layers.Conv2DTranspose(128, (4, 4), strides=(1, 1), padding='same', use_bias=False))     
     assert model.output_shape == (None, 4, 4, 128) #Decrease third channel
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Conv2DTranspose(64, (5, 5), strides=(2, 2), padding='same', use_bias=False))    
+    model.add(layers.Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same', use_bias=False))    
     assert model.output_shape == (None, 8, 8, 64) #Decrease again, increase image size
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Conv2DTranspose(32, (5, 5), strides=(2, 2), padding='same', use_bias=False))    
+    model.add(layers.Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same', use_bias=False))    
     assert model.output_shape == (None, 16, 16, 32) #Decrease again, increase image size
     model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU())
 
-    model.add(layers.Conv2DTranspose(3, (5, 5), strides=(2, 2), padding='same', use_bias=False, activation='tanh'))    
+    model.add(layers.Conv2DTranspose(3, (4, 4), strides=(2, 2), padding='same', use_bias=False, activation='tanh'))    
     assert model.output_shape == (None, 32, 32, 3) #Get final output
 
     return model 
 
 def make_discriminator_model():
     model = tf.keras.Sequential()
-    model.add(layers.Conv2D(64, (5, 5), strides=(2, 2), padding='same', 
+    model.add(layers.Conv2D(64, (3, 3), strides=(1, 1), padding='same', 
                                      input_shape=[32, 32, 3])) #filter size of 64 (filters  = num of output filters in convolution, e.g output size in neurons)
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.3)) 
 
-    model.add(layers.Conv2D(128, (5, 5), strides=(2, 2), padding='same')) 
+    model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
     model.add(layers.LeakyReLU())
     model.add(layers.Dropout(0.3))
 
@@ -154,7 +156,7 @@ def generate_and_save_images(model, epoch, test_input):
     print(predictions.shape)    
     for i in range(predictions.shape[0]):
         plt.subplot(4, 4, i+1)                    
-        plt.imshow((predictions[i, :, :, :]+1)/2) #Scale images from [-1,1] to [0,1] 
+        plt.imshow((predictions[i, :, :, :]+1)/2) #Scale images from [-1,1] to [0,1]         
         plt.axis('off')
     #print(predictions[i,:,:,:] * 127.5 + 127.5)
     plt.savefig('output/image_at_epoch_{:04d}.png'.format(epoch))
@@ -165,9 +167,10 @@ dir_data = "processed-celeba-small/processed_celeba_small/celeba/New Folder With
 #"Practice/processed-celeba-small/processed_celeba_small/celeba/161979.jpg"
 #"Practice/processed-celeba-small/processed_celeba_small/celeba/New Folder With Items/000001.jpg"
 #32,600 images total, 64x64x3
+
 #57331 in 
-nTrain = 16600
 nTest = 8000
+nTrain = 57331-nTest
 BUFFER_SIZE = nTrain
 BATCH_SIZE = 256 #originally 256
 EPOCHS = 200
