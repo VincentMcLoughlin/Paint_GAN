@@ -29,7 +29,8 @@ def get_np_data(nm_imgs_train):
 
     for i, my_id in enumerate(nm_imgs_train):
         image = load_img(dir_data + "/" + my_id, target_size = img_shape[:2])
-        image = img_to_array(image)/255.0
+        #image = img_to_array(image)/255.0 #This normalization is likely wrong, too compressive, on 0-1 range
+        image = (img_to_array(image) - 127.5)/127.5 #Gives -1 to 1 range
         x_train.append(image)
     x_train = np.array(x_train)
     return (x_train)

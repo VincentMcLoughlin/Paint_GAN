@@ -1,6 +1,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
-# example of a dcgan on cifar10
+
+import numpy as np
 from numpy import expand_dims
 from numpy import zeros
 from numpy import ones
@@ -97,16 +98,15 @@ def get_np_data(nm_imgs_train):
 
 # load and prepare cifar10 training images
 def load_real_samples():
-	# load cifar10 dataset
-	(trainX, _), (_, _) = load_data()
-
-    X_train = get_np_data(nm_imgs_train)
-    print("X_train.shape = {}".format(X_train.shape))
-	# convert from unsigned ints to floats
-	X = trainX.astype('float32')
-	# scale from [0,255] to [-1,1]
+    # load cifar10 dataset
+    #(trainX, _), (_, _) = load_data()
+    trainX = get_np_data(nm_imgs_train)
+    print("X_train.shape = {}".format(trainX.shape))
+    # convert from unsigned ints to floats
+    X = trainX.astype('float32')
+    # scale from [0,255] to [-1,1]
     #X = (X - 127.5) / 127.5
-	return X
+    return X
 
 # select real samples
 def generate_real_samples(dataset, n_samples):
@@ -199,6 +199,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=200, n_batc
 		if (i+1) % 10 == 0:
 			summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
+img_shape = (32,32,3)
 dir_data = "processed-celeba-small/processed_celeba_small/celeba/New Folder With Items"
 nTrain = 50000
 nTest = 7000
