@@ -27,10 +27,13 @@ physical_devices = tf.config.list_physical_devices('GPU')
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 # define the standalone discriminator model
-def define_discriminator(in_shape=(32,32,3)):
+def define_discriminator(in_shape=(64,64,3)):
 	model = Sequential()
 	# normal
 	model.add(Conv2D(64, (3,3), padding='same', input_shape=in_shape))
+	model.add(LeakyReLU(alpha=0.2))
+	# downsample
+	model.add(Conv2D(128, (3,3), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	# downsample
 	model.add(Conv2D(128, (3,3), strides=(2,2), padding='same'))
@@ -59,12 +62,15 @@ def define_generator(latent_dim):
 	model.add(LeakyReLU(alpha=0.2))
 	model.add(Reshape((4, 4, 256)))
 	# upsample to 8x8
-	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
+	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same')) #Seems to be max our memory can take
 	model.add(LeakyReLU(alpha=0.2))
 	# upsample to 16x16
 	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	# upsample to 32x32
+	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
+	model.add(LeakyReLU(alpha=0.2))
+	# upsample to 64x64
 	model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding='same'))
 	model.add(LeakyReLU(alpha=0.2))
 	# output layer
@@ -199,7 +205,7 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=200, n_batc
 		if (i+1) % 10 == 0:
 			summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
-img_shape = (32,32,3)
+img_shape = (64,64,3)
 dir_data = "processed-celeba-small/processed_celeba_small/celeba/New Folder With Items"
 nTrain = 50000
 nTest = 7000
