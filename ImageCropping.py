@@ -2,8 +2,9 @@
 #https://stackoverflow.com/questions/9103257/resize-image-maintaining-aspect-ratio-and-making-portrait-and-landscape-images-e
 
 from PIL import Image, ImageChops, ImageOps
-
-def makeThumb(f_in, f_out, size=(128,128), pad=False):
+import os
+resolution = 64
+def makeThumb(f_in, f_out, size=(resolution,resolution), pad=False):
 
     image = Image.open(f_in)
     image.thumbnail(size, Image.ANTIALIAS)
@@ -19,12 +20,14 @@ def makeThumb(f_in, f_out, size=(128,128), pad=False):
 
     else:
         print(Image.ANTIALIAS)
-        thumb = ImageOps.fit(image, size, Image.ANTIALIAS, 0,(0.5, 0.5))
+        thumb = ImageOps.fit(image, size, Image.ANTIALIAS, 0.1,(0.5, 0.5))
 
     thumb.save(f_out)
 
 
 source = "wikiart/wikiart/Impressionism/abdullah-suriosubroto_bamboo-forest.jpg"
 
-makeThumb(source, "image_padded.JPG", pad=True)
-makeThumb(source, "image_centerCropped.JPG", pad=False)
+# makeThumb(source, "image_padded.JPG", pad=True)
+# makeThumb(source, "image_centerCropped.JPG", pad=False)
+dir_data = "wikiart/wikiart/Impressionism"
+print(os.listdir(dir_data))

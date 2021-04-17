@@ -188,17 +188,29 @@ print("X_train.shape = {}".format(X_train.shape))
 X_test  = get_np_data(nm_imgs_test)
 print("X_test.shape = {}".format(X_test.shape))
 
-# fig = plt.figure(figsize=(30,10))
-# nplot = 7
-# for count in range(1,nplot):
-#     ax = fig.add_subplot(1,nplot,count)
-#     ax.imshow(X_train[count])
-# plt.show()
+fig = plt.figure(figsize=(30,10))
+nplot = 7
+for count in range(1,nplot):
+    ax = fig.add_subplot(1,nplot,count)
+    ax.imshow(X_train[count])
+plt.show()
 
+data_augmentation = tf.keras.Sequential([
+  layers.experimental.preprocessing.RandomFlip("horizontal"),
+])
+flipped = tf.image.flip_left_right(X_train)
 generator = make_generator_model() 
 discriminator = make_discriminator_model()
 cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
 
 train_dataset = tf.data.Dataset.from_tensor_slices(X_train).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+aug_dataset = tf.data.Dataset.from_tensor_slices(flipped).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
+#aug_dataset = train_dataset..map(lambda x: (data_augmentation(x, training=True)), num_parallel_calls=8) #This works
+#train_ds = ds.map(lambda x,y: (data_augmentation(x, training=True), y), num_parallel_calls=8)
+# for image_batch in train_dataset:
+#     batch = tf.image.flip_left_right(image_batch)
+#     print(batch.size)
+#     aug_dataset.concatenate(batch)
+train_dataset = train_dataset.concatenate(aug_dataset)
+print(len(train_dataset))
 train(train_dataset, EPOCHS, generator, discriminator, generator_optimizer, discriminator_optimizer, seed)
-

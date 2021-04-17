@@ -7,3 +7,12 @@ share/
 Practice/processed-celeba-smal/
 Practice/output/
 Practice/processed-celeba-small
+Practice/training_checkpoints/
+training_checkpoints/*
+wikiart/
+archive/
+*.npy
+*.h5
+*.png
+*.jpg
+*.gz
