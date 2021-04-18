@@ -22,6 +22,8 @@ from keras.layers import Conv2DTranspose
 from keras.layers import LeakyReLU
 from keras.layers import Dropout
 from matplotlib import pyplot
+from numpy import load
+import matplotlib.pyplot as plt
 
 physical_devices = tf.config.list_physical_devices('GPU') 
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
@@ -115,13 +117,10 @@ def load_real_samples():
     return X
 
 # select real samples
-def generate_real_samples(dataset, n_samples):
-	# choose random instances
-	ix = randint(0, dataset.shape[0], n_samples)
-	# retrieve selected images
-	X = dataset[ix]
-	# generate 'real' class labels (1)
-	y = ones((n_samples, 1))
+def generate_real_samples(dataset, n_samples):	
+	ix = randint(0, dataset.shape[0], n_samples) #Pick random indices
+	X = dataset[ix]	#Get samples
+	y = ones((n_samples, 1)) #Assign labels
 	return X, y
 
 # generate points in latent space as input for the generator
@@ -206,12 +205,25 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=200, n_batc
 			summarize_performance(i, g_model, d_model, dataset, latent_dim)
 
 img_shape = (64,64,3)
-dir_data = "processed-celeba-small/processed_celeba_small/celeba/New Folder With Items"
-nTrain = 50000
-nTest = 7000
+dir_data = "../wikiart/wikiart/Impressionism"
+#dir_data = "processed-celeba-small/processed_celeba_small/celeba/New Folder With Items"
+#nTrain = 50000
+#nTest = 7000
+nTrain = 12000
+nTest = 1000
+#data = load('../impressionism_64x64_bkp.npy')
+#X_train = data[:nTrain]
+#X_test = data[nTrain:nTrain+nTest]
 nm_imgs = np.sort(os.listdir(dir_data))
 nm_imgs_train = nm_imgs[:nTrain]
 nm_imgs_test = nm_imgs[nTrain:nTrain+nTest]
+
+fig = plt.figure(figsize=(30,10))
+nplot = 7
+for count in range(1,nplot):
+    ax = fig.add_subplot(1,nplot,count)
+    ax.imshow(X_train[count])
+plt.show()
 # size of the latent space
 latent_dim = 100
 # create the discriminator
@@ -222,5 +234,14 @@ g_model = define_generator(latent_dim)
 gan_model = define_gan(g_model, d_model)
 # load image data
 dataset = load_real_samples()
+
+for i in range(49):
+	# define subplot
+	pyplot.subplot(7, 7, 1 + i)
+	# turn off axis
+	pyplot.axis('off')
+	# plot raw pixel data
+	pyplot.imshow(dataset[i])
+pyplot.show()
 # train model
 train(g_model, d_model, gan_model, dataset, latent_dim)

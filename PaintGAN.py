@@ -281,12 +281,12 @@ print("X_train.shape = {}".format(X_train.shape))
 X_test = data[nTrain:nTrain+nTest]
 print("X_test.shape = {}".format(X_test.shape))
 
-# fig = plt.figure(figsize=(30,10))
-# nplot = 7
-# for count in range(1,nplot):
-#     ax = fig.add_subplot(1,nplot,count)
-#     ax.imshow(X_train[count])
-# plt.show()
+fig = plt.figure(figsize=(30,10))
+nplot = 7
+for count in range(1,nplot):
+    ax = fig.add_subplot(1,nplot,count)
+    ax.imshow(X_train[count])
+plt.show()
 
 cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
 
