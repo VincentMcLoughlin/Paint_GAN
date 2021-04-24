@@ -202,32 +202,48 @@ def summarize_performance(epoch, g_model, d_model, dataset, latent_dim, n_sample
 	filename = 'generator_model_%03d.h5' % (epoch+1)
 	g_model.save(filename)
 
+def save_losses(losses):
+    losses_file = open("64x64_losses.csv", "w")    
+    np.savetxt(losses_file, losses, delimiter=",")        
+    losses_file.close()
+
 def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=200, n_batch=128):
-	bat_per_epo = int(dataset.shape[0] / n_batch)
-	half_batch = int(n_batch / 2)
-	# manually enumerate epochs
-	for i in range(n_epochs):
-		# enumerate batches over the training set
-		for j in range(bat_per_epo):
-			# get randomly selected 'real' samples
-			X_real, y_real = generate_real_samples(dataset, half_batch)
-			d_loss1, _ = d_model.train_on_batch(X_real, y_real) #training twice per batch is best practice (once with real once with fake)			
+    bat_per_epo = int(dataset.shape[0] / n_batch)
+    half_batch = int(n_batch / 2)
+    losses = [] #Epoch Batch d_loss1 d_loss2 g_loss
 
-			X_fake, y_fake = generate_fake_samples(g_model, latent_dim, half_batch) #Get fake samples
-			d_loss2, _ = d_model.train_on_batch(X_fake, y_fake) #training twice per batch is best practice 
-			
+    # manually enumerate epochs
+    for i in range(n_epochs):
+        # enumerate batches over the training set
+        for j in range(bat_per_epo):
+            # get randomly selected 'real' samples
+            X_real, y_real = generate_real_samples(dataset, half_batch)
+            d_loss1, _ = d_model.train_on_batch(X_real, y_real) #training twice per batch is best practice (once with real once with fake)			
+
+            X_fake, y_fake = generate_fake_samples(g_model, latent_dim, half_batch) #Get fake samples
+            d_loss2, _ = d_model.train_on_batch(X_fake, y_fake) #training twice per batch is best practice 
+            
             # prepare points in latent space as input for the generator
-			X_gan = generate_latent_points(latent_dim, n_batch)
-			y_gan = ones((n_batch, 1)) #Label as 1 because we want the discriminator to think they're real
-			g_loss = gan_model.train_on_batch(X_gan, y_gan)  # update the generator via the discriminator's error, should be between 1.5-2+
+            X_gan = generate_latent_points(latent_dim, n_batch)
+            y_gan = ones((n_batch, 1)) #Label as 1 because we want the discriminator to think they're real
+            g_loss = gan_model.train_on_batch(X_gan, y_gan)  # update the generator via the discriminator's error, should be between 1.5-2+
 
-			# summarize loss on this batch
-			print('>%d, %d/%d, d1=%.3f, d2=%.3f g=%.3f' %
-				(i+1, j+1, bat_per_epo, d_loss1, d_loss2, g_loss))
+            # summarize loss on this batch
+            print('>%d, %d/%d, d1=%.3f, d2=%.3f g=%.3f' %
+                (i+1, j+1, bat_per_epo, d_loss1, d_loss2, g_loss))
 
-        		# evaluate the model performance, sometimes
-		if (i+1) % 10 == 0:
-			summarize_performance(i, g_model, d_model, dataset, latent_dim)
+            losses.append([i,j,d_loss1,d_loss2,g_loss])
+
+                # evaluate the model performance, sometimes
+        if (i+1) % 10 == 0:
+            summarize_performance(i, g_model, d_model, dataset, latent_dim)
+
+        # losses[i,0] = i
+        # losses[i,1] = d_loss1
+        # losses[i,2] = d_loss2        
+        # losses[i,3] = g_loss        
+    losses = np.array(losses)
+    save_losses(losses)
 
 def generate_and_save_images(model, epoch, test_input):
   # Notice `training` is set to False.
@@ -292,4 +308,4 @@ cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
 
 #train_dataset = tf.data.Dataset.from_tensor_slices(X_train).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
 #train(train_dataset, EPOCHS, generator, discriminator, generator_optimizer, discriminator_optimizer, seed)
-train(generator, discriminator, gan_model, X_train, latent_dim)
+train(generator, discriminator, gan_model, X_train, latent_dim, EPOCHS)

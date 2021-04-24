@@ -12,7 +12,8 @@ from tensorflow.keras import layers
 physical_devices = tf.config.list_physical_devices('GPU') 
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
-img_shape = (64,64,3)
+#Saves folder to npy format for quick loading later.
+img_shape = (128,128,3)
 
 data_augmentation = tf.keras.Sequential([
   layers.experimental.preprocessing.RandomFlip("horizontal"),
@@ -42,7 +43,8 @@ data = get_np_data(image_names)
 augmented_data = tf.image.flip_left_right(data)
 total = np.concatenate((data, augmented_data))
 # save to npy file
-save('impressionism_64x64_augmented.npy', total)
+save('impressionism_128x128.npy', data)
+#save('impressionism_64x64_augmented.npy', total)
 
 print(data.shape)
 print(augmented_data.shape)
