@@ -1,33 +1,35 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' 
 
-import numpy as np
-from numpy import expand_dims
+from math import sqrt
+from numpy import load
+from numpy import asarray
 from numpy import zeros
 from numpy import ones
-from numpy import vstack
 from numpy.random import randn
 from numpy.random import randint
-import tensorflow as tf
-import keras
-import matplotlib.pyplot as plt
-from keras.preprocessing.image import load_img 
-from keras.preprocessing.image import img_to_array
+from skimage.transform import resize
 from keras.optimizers import Adam
 from keras.models import Sequential
+from keras.models import Model
+from keras.layers import Input
 from keras.layers import Dense
-from keras.layers import Reshape
 from keras.layers import Flatten
+from keras.layers import Reshape
 from keras.layers import Conv2D
-from keras.layers import Conv2DTranspose
+from keras.layers import UpSampling2D
+from keras.layers import AveragePooling2D
 from keras.layers import LeakyReLU
-from keras.layers import Dropout
-from tensorflow.keras import layers
+from keras.layers import Layer
+from keras.layers import Add
+from keras.constraints import max_norm
+from keras.initializers import RandomNormal
+from keras import backend
 from matplotlib import pyplot
-from numpy import load
-from tensorflow.keras.utils import plot_model
-import time
-from IPython import display
+import tensorflow as tf
+
+physical_devices = tf.config.list_physical_devices('GPU') 
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 #Need three classes to achieve this progressive growth 
 #1. Weighted Sum Layer to control sum of old and new layers 
@@ -66,7 +68,7 @@ class MinibatchStdev(Layer):
 
         squ_diffs = backend.square(inputs-mean) #Sq diff between pixel value and mean
 
-        mean_sq_diffs = backend.mean(squ_diffs, axis=0, keepdims=True) #Avg sq diff
+        mean_sq_diff = backend.mean(squ_diffs, axis=0, keepdims=True) #Avg sq diff
 
         mean_sq_diff += 1e-8 #Add small value to avoid explosion when calculating stddev
 
@@ -234,16 +236,16 @@ def define_discriminator(n_blocks, input_shape=(4,4,3)):
     in_image = Input(shape=input_shape)
 
     #Conv 1x1 
-    d = COnv2D(128, (1,1), padding="same", kernel_initializer=init, kernel_constraint=const)(in_image)
+    d = Conv2D(128, (1,1), padding="same", kernel_initializer=init, kernel_constraint=const)(in_image)
     d = LeakyReLU(alpha=0.2)(d)
 
-    #COnv 3x3 (output block)
+    #Conv 3x3 (output block)
     d = MinibatchStdev()(d)
     d = Conv2D(128, (3,3), padding='same', kernel_initializer=init, kernel_constraint=const)(d)
     d = LeakyReLU(alpha=0.2)(d)
 
     #conv 4x4
-    d = COnv2D(128, (4,4), padding="same", kernel_initializer=init, kernel_constraint=const)(d)
+    d = Conv2D(128, (4,4), padding="same", kernel_initializer=init, kernel_constraint=const)(d)
     d = LeakyReLU(alpha=0.2)(d)
 
     #dense output layer
