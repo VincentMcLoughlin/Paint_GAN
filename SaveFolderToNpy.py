@@ -43,8 +43,8 @@ data = get_np_data(image_names)
 augmented_data = tf.image.flip_left_right(data)
 total = np.concatenate((data, augmented_data))
 # save to npy file
-save('impressionism_128x128.npy', data)
-#save('impressionism_64x64_augmented.npy', total)
+#save('impressionism_128x128.npy', data)
+save('impressionism_128x128_augmented.npy', total)
 
 print(data.shape)
 print(augmented_data.shape)

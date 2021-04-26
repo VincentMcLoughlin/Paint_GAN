@@ -72,7 +72,7 @@ def define_generator(latent_dim):
     n_nodes = 256*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
                       #Value needs to be large enough to model a variety of different features from the latent input space
     model.add(Dense(n_nodes, input_dim=latent_dim))
-    model.add(layers.BatchNormalization())
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
     
     model.add(Reshape((4,4,256)))
@@ -81,25 +81,27 @@ def define_generator(latent_dim):
     #Upsample to 8x8
     #Seems to be max our memory can take. Generally want to pick a kernel and stride as multiples of each other, avoids checkerboard output
     #The (2,2) stride results in doubling the height and width
-    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same")) 
-    print(model.output_shape)
-    assert model.output_shape == (None, 8, 8, 128) #Decrease third channel    
+    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same"))     
+    assert model.output_shape == (None, 8, 8, 128) #Decrease third channel
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2)) #This slope is best practice according to the guide? Not sure where they saw this, defaults to 0.3 according to tf website
 
     #Upsample to 16x16
-    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same"))
-    print(model.output_shape)
+    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same"))    
     assert model.output_shape == (None, 16, 16, 128) #Decrease again, increase image size    
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
 
     #Upsample to 32x32
     model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same")) 
-    assert model.output_shape == (None, 32, 32, 128) #Decrease again, increase image size    
+    assert model.output_shape == (None, 32, 32, 128) #Decrease again, increase image size
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
 
     #Upsample to 64x64
     model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same")) 
     assert model.output_shape == (None, 64, 64, 128) #Decrease again, increase image size    
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
 
     #Output
@@ -119,23 +121,27 @@ def define_discriminator(in_shape=img_shape): #Do we really need this many layer
 
     #Downsample 32x32
     model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same'))     
+    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
 
     #Downsample to 16x16
     model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same'))     
+    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
 
     #Downsample to 8x8
     model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same'))     
+    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))    
 
     #Downsample to 4x4
     model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same'))     
+    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))    
 
     model.add(layers.Flatten())
-    model.add(Dropout(0.4))
-    model.add(layers.Dense(1, activation='sigmoid')) #output decision, fake/not, should we use relu here? They don't in tf example. Lets try sigmoid first and then see
+    model.add(Dropout(0.3))
+    model.add(layers.Dense(1, activation='sigmoid')) #output decision, fake/not, sigmoid seems to be only activation function that works
 
     opt = Adam(lr=learning_rate, beta_1=0.5)
     model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['accuracy'])
@@ -259,10 +265,7 @@ def generate_and_save_images(model, epoch, test_input):
 #nTest = 8000
 #nTrain = len(image_names) - nTest
 
-nTrain = 12000
-nTest = 1000
-
-BUFFER_SIZE = nTrain
+BUFFER_SIZE = 10000
 BATCH_SIZE = 128 
 EPOCHS = 200
 latent_dim = 100
@@ -280,14 +283,17 @@ gan_model = define_gan(generator,discriminator)
 
 num_examples_to_generate = 16
 #seed = tf.random.normal([num_examples_to_generate, latent_dim])
-data = load('impressionism_64x64.npy')
+data = load('impressionism_64x64_augmented.npy') #Prenormalized dataset, saved to .npy to reduce loading time. 
 #X_train = get_np_data(nm_imgs_train)
-X_train = data[:nTrain]
+nTrain = len(data)
+#nTest = nTrain-(nTrain-2000)
+#X_train = data[:nTrain]
+X_train = data
 print("X_train.shape = {}".format(X_train.shape))
 
 #X_test  = get_np_data(nm_imgs_test)
-X_test = data[nTrain:nTrain+nTest]
-print("X_test.shape = {}".format(X_test.shape))
+# X_test = data[nTrain:nTrain+nTest]
+# print("X_test.shape = {}".format(X_test.shape))
 
 fig = plt.figure(figsize=(30,10))
 nplot = 7

@@ -72,7 +72,7 @@ def define_generator(latent_dim):
     n_nodes = 256*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
                       #Value needs to be large enough to model a variety of different features from the latent input space
     model.add(Dense(n_nodes, input_dim=latent_dim))
-    model.add(layers.BatchNormalization())
+    #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
     
     model.add(Reshape((4,4,256)))
@@ -125,14 +125,14 @@ def define_discriminator(in_shape=img_shape): #Do we really need this many layer
 
     #Normal 
     model.add(Conv2D(64, (3,3), padding="same", input_shape=in_shape))
+    model.add(layers.LeakyReLU(alpha=0.2))    
+
+    #Downsample 64x64
+    model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
+    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
 
-    # #Downsample 64x64
-    # model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
-    # #model.add(layers.BatchNormalization())
-    # model.add(layers.LeakyReLU(alpha=0.2))
-
-    #Downsample 32x32
+    #Downsample to 32x32
     model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
     #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))
@@ -140,14 +140,9 @@ def define_discriminator(in_shape=img_shape): #Do we really need this many layer
     #Downsample to 16x16
     model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
     #model.add(layers.BatchNormalization())
-    model.add(layers.LeakyReLU(alpha=0.2))
-
-    #Downsample to 8x8
-    model.add(layers.Conv2D(128, (3, 3), strides=(2, 2), padding='same')) 
-    #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))    
 
-    #Downsample to 4x4
+    #Downsample to 8x8
     model.add(layers.Conv2D(256, (3, 3), strides=(2, 2), padding='same')) 
     #model.add(layers.BatchNormalization())
     model.add(layers.LeakyReLU(alpha=0.2))    
@@ -278,10 +273,7 @@ def generate_and_save_images(model, epoch, test_input):
 #nTest = 8000
 #nTrain = len(image_names) - nTest
 
-nTrain = 12000
-nTest = 1000
-
-BUFFER_SIZE = nTrain
+BUFFER_SIZE = 10000
 BATCH_SIZE = 128
 EPOCHS = 200
 latent_dim = 100
@@ -299,14 +291,15 @@ gan_model = define_gan(generator,discriminator)
 
 num_examples_to_generate = 16
 #seed = tf.random.normal([num_examples_to_generate, latent_dim])
-data = load('impressionism_128x128.npy')
+data = load('impressionism_128x128_augmented.npy')
+nTrain = len(data)
 #X_train = get_np_data(nm_imgs_train)
-X_train = data[:nTrain]
+X_train = data
 print("X_train.shape = {}".format(X_train.shape))
 
 #X_test  = get_np_data(nm_imgs_test)
-X_test = data[nTrain:nTrain+nTest]
-print("X_test.shape = {}".format(X_test.shape))
+# X_test = data[nTrain:nTrain+nTest]
+# print("X_test.shape = {}".format(X_test.shape))
 
 fig = plt.figure(figsize=(30,10))
 nplot = 7
