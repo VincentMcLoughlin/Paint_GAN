@@ -69,20 +69,20 @@ def generate_fake_samples(g_model, latent_dim, n_samples):
 def define_generator(latent_dim):
     model = Sequential()
 
-    n_nodes = 256*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
+    n_nodes = 512*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
                       #Value needs to be large enough to model a variety of different features from the latent input space
     model.add(Dense(n_nodes, input_dim=latent_dim))
     #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
     
-    model.add(Reshape((4,4,256)))
-    assert model.output_shape == (None, 4, 4, 256) 
+    model.add(Reshape((4,4,512)))
+    assert model.output_shape == (None, 4, 4, 512) 
 
     #Upsample to 8x8
     #Seems to be max our memory can take. Generally want to pick a kernel and stride as multiples of each other, avoids checkerboard output
     #The (2,2) stride results in doubling the height and width
-    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same"))     
-    assert model.output_shape == (None, 8, 8, 128) #Decrease third channel
+    model.add(Conv2DTranspose(256, (4,4), strides=(2,2), padding="same"))     
+    assert model.output_shape == (None, 8, 8, 256) #Decrease third channel
     #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2)) #This slope is best practice according to the guide? Not sure where they saw this, defaults to 0.3 according to tf website
 
