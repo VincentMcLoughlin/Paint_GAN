@@ -15,13 +15,13 @@ img_shape = (64,64,3)
 latent_dim = 100
 n_samples = 1 #batch size
 
-real_data = load('impressionism_128x128_augmented.npy')
-g_model = tf.keras.models.load_model('128x128_augmented_models/generator_model_200.h5')
-filename = "128x128_Comparison"
+# real_data = load('impressionism_128x128_augmented.npy')
+# g_model = tf.keras.models.load_model('128x128_augmented_models/generator_model_200.h5')
+# filename = "128x128_Comparison"
 
-# real_data = load('impressionism_64x64_augmented.npy')
-# g_model = tf.keras.models.load_model('64x64_augmented_models/generator_model_200.h5')
-# filename = "64x64_Comparison"
+real_data = load('impressionism_64x64_augmented.npy')
+g_model = tf.keras.models.load_model('64x64_augmented_models/generator_model_200.h5')
+filename = "64x64_Comparison"
 
 dpi_val = 96 #Monitor dependent, pixels per inch
 actual_pic_size = img_shape[0]/dpi_val

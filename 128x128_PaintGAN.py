@@ -31,7 +31,6 @@ from IPython import display
 import glob
 import imageio
 
-
 physical_devices = tf.config.list_physical_devices('GPU') 
 tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
@@ -69,21 +68,21 @@ def generate_fake_samples(g_model, latent_dim, n_samples):
 def define_generator(latent_dim):
     model = Sequential()
 
-    n_nodes = 256*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
+    n_nodes = 512*4*4 #Good number of nodes to start off with, start off with 4x4 image and enough nodes in the dense layer to approximate picture
                       #Value needs to be large enough to model a variety of different features from the latent input space
     model.add(Dense(n_nodes, input_dim=latent_dim))
     #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2))
     
-    model.add(Reshape((4,4,256)))
-    assert model.output_shape == (None, 4, 4, 256) 
+    model.add(Reshape((4,4,512)))
+    assert model.output_shape == (None, 4, 4, 512) 
 
     #Upsample to 8x8
     #Seems to be max our memory can take. Generally want to pick a kernel and stride as multiples of each other, avoids checkerboard output
     #The (2,2) stride results in doubling the height and width
-    model.add(Conv2DTranspose(128, (4,4), strides=(2,2), padding="same")) 
+    model.add(Conv2DTranspose(256, (4,4), strides=(2,2), padding="same")) 
     print(model.output_shape)
-    assert model.output_shape == (None, 8, 8, 128) #Decrease third channel
+    assert model.output_shape == (None, 8, 8, 256) #Decrease third channel
     #model.add(layers.BatchNormalization())
     model.add(LeakyReLU(alpha=0.2)) #This slope is best practice according to the guide? Not sure where they saw this, defaults to 0.3 according to tf website
 
@@ -240,14 +239,10 @@ def train(g_model, d_model, gan_model, dataset, latent_dim, n_epochs=200, n_batc
 
             losses.append([i,j,d_loss1,d_loss2,g_loss])
 
-                # evaluate the model performance, sometimes
+        # evaluate the model performance, sometimes
         if (i+1) % 10 == 0:
             summarize_performance(i, g_model, d_model, dataset, latent_dim)
-
-        # losses[i,0] = i
-        # losses[i,1] = d_loss1
-        # losses[i,2] = d_loss2        
-        # losses[i,3] = g_loss        
+           
     losses = np.array(losses)
     save_losses(losses)
 
@@ -261,17 +256,11 @@ def generate_and_save_images(model, epoch, test_input):
     for i in range(predictions.shape[0]):
         plt.subplot(4, 4, i+1)                    
         plt.imshow((predictions[i, :, :, :]+1)/2) #Scale images from [-1,1] to [0,1]         
-        plt.axis('off')
-    #print(predictions[i,:,:,:] * 127.5 + 127.5)
+        plt.axis('off')    
     plt.savefig('output/image_at_epoch_{:04d}.png'.format(epoch))
     #plt.show()
     plt.close(fig)
 
-#dir_data = "wikiart/wikiart/Impressionism"
-#dir_data = "Practice/processed-celeba-small/processed_celeba_small/celeba/New Folder With Items"
-#image_names = np.sort(os.listdir(dir_data))
-#nTest = 8000
-#nTrain = len(image_names) - nTest
 
 BUFFER_SIZE = 10000
 BATCH_SIZE = 128
@@ -281,25 +270,19 @@ latent_dim = 100
 learning_rate = 0.0002
 
 generator = define_generator(latent_dim) 
-#plot_model(generator, to_file='generator_plot.png', show_shapes=True, show_layer_names=True) #Useful for reports
+plot_model(generator, to_file='generator_plot.png', show_shapes=True, show_layer_names=True) #Useful for reports
 
 discriminator = define_discriminator()
-#plot_model(model, to_file='generator_plot.png', show_shapes=True, show_layer_names=True) #useful for reports
+plot_model(discriminator, to_file='discriminator_plot.png', show_shapes=True, show_layer_names=True) #useful for reports
 
 gan_model = define_gan(generator,discriminator)
-#plot_model(gan_model, to_file='gan_plot.png', show_shapes=True, show_layer_names=True)
+plot_model(gan_model, to_file='gan_plot.png', show_shapes=True, show_layer_names=True)
 
-num_examples_to_generate = 16
-#seed = tf.random.normal([num_examples_to_generate, latent_dim])
 data = load('impressionism_128x128_augmented.npy')
 nTrain = len(data)
 #X_train = get_np_data(nm_imgs_train)
 X_train = data
 print("X_train.shape = {}".format(X_train.shape))
-
-#X_test  = get_np_data(nm_imgs_test)
-# X_test = data[nTrain:nTrain+nTest]
-# print("X_test.shape = {}".format(X_test.shape))
 
 fig = plt.figure(figsize=(30,10))
 nplot = 7
@@ -309,7 +292,4 @@ for count in range(1,nplot):
 plt.show()
 
 cross_entropy = keras.losses.BinaryCrossentropy(from_logits=True)
-
-#train_dataset = tf.data.Dataset.from_tensor_slices(X_train).shuffle(BUFFER_SIZE).batch(BATCH_SIZE)
-#train(train_dataset, EPOCHS, generator, discriminator, generator_optimizer, discriminator_optimizer, seed)
-train(generator, discriminator, gan_model, X_train, latent_dim, EPOCHS)
+#train(generator, discriminator, gan_model, X_train, latent_dim, EPOCHS)
